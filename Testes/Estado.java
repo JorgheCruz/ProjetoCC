@@ -65,7 +65,7 @@ public class Estado {
     }
 
     public String toString(){
-        String resposta = ("Ram = " + this.getRam() + " CPU Usage: " + this.getCpu());
+        String resposta = ("Ram = " + this.getRam() + " CPU Usage: " + this.getCpu() + " Time: " + System.currentTimeMillis());
         return resposta;
     } 
 }
