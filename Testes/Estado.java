@@ -1,6 +1,8 @@
+import java.io.IOException;
 import java.lang.management.OperatingSystemMXBean;
 import java.lang.Runtime;
 import java.lang.management.ManagementFactory;
+import java.util.Scanner;
 /**
  *
  * @author treishy
@@ -10,7 +12,7 @@ public class Estado {
 
     private long ram;
     private double cpu;
-    private int rtt = 7;
+    private long rtt;
     private float lb;
     private boolean available;
    // private OperatingSystemMXBean os;
@@ -19,6 +21,12 @@ public class Estado {
         this.lb = (float) 7.5;
         available = true;
         updateEstado();
+    }
+    
+    public Estado(long ram, double cpu, long rtt){
+        this.ram = ram;
+        this.cpu = cpu;
+        this.rtt = rtt;
     }
     public double getCpu() {
         return cpu;
@@ -32,7 +40,7 @@ public class Estado {
         return ram;
     }
 
-    public int getRtt() {
+    public long getRtt() {
         return rtt;
     }
 
@@ -48,7 +56,7 @@ public class Estado {
         this.ram = ram;
     }
 
-    public void setRtt(int rtt) {
+    public void setRtt(long rtt) {
         this.rtt = rtt;
     }
     
@@ -63,9 +71,11 @@ public class Estado {
 
         
     }
+    
+    
 
     public String toString(){
-        String resposta = ("Ram = " + this.getRam() + " CPU Usage: " + this.getCpu() + " Time: " + System.currentTimeMillis());
+        String resposta = ("Ram = " + this.getRam() + "\nCPU Usage: " + this.getCpu() + "\nRTT: " +this.getRtt());
         return resposta;
     } 
 }

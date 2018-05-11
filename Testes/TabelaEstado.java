@@ -1,6 +1,11 @@
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.lang.String;
+import java.io.StringReader;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.util.Scanner;
 
 /**
  *
@@ -24,6 +29,29 @@ public class TabelaEstado {
         tabela.put(ID,newState);
     }
     
+    public Estado createEstado(String data){
+        String s,key;
+        long  ram,rtt,oldrtt;
+        double cpu;
+        Estado newState;
+        Scanner scanner = new Scanner(data);
+        s=scanner.nextLine();
+        key=s; // considerei first line ser o ID
+        s=scanner.nextLine();        
+        ram= Long.parseLong(s);
+        s=scanner.nextLine();
+        cpu= Double.parseDouble(s);
+        s=scanner.nextLine();
+        rtt= Long.parseLong(s);
+        if (tabela.containsKey(key)) {
+            newState = tabela.get(key);
+            oldrtt = newState.getRtt();
+            rtt= (long) (0.125 * rtt + (0.875) * oldrtt);}
+        
+        newState = new Estado(ram,cpu,rtt);
+        return newState;
+    }
+    
     public String toString(){	
         Iterator iterator = tabela.keySet().iterator();
         StringBuilder str = new StringBuilder();
@@ -41,7 +69,13 @@ public class TabelaEstado {
         Estado estadodois = new Estado();
         table.getTabela().put("200",estadoum);
         table.getTabela().put("201",estadodois);
+        String test = "\n200\n2\n2\n5";
+        Estado estadotres = createEstado(test);
+        table.getTabela().put("2",estadotres);
+
+        //System.out.println(estadotres.toString());
         System.out.println(table.toString());
+
     }
 }
 
