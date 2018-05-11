@@ -8,6 +8,7 @@ import java.net.MulticastSocket;
 import java.net.UnknownHostException;
 import static java.sql.DriverManager.println;
 import java.net.DatagramSocket;
+import java.util.Scanner;
 
 /**
  *
@@ -52,7 +53,6 @@ class MonitorSend extends Thread {
 
 		try {
 			socket.send(this.packet);
-			System.out.println("!------[Pedido enviado]------!");
         	
 			sleep(sleeptime);
 		}
@@ -65,10 +65,11 @@ class MonitorSend extends Thread {
 }
 
 class MonitorReceive extends Thread {
-
+ 
     private final DatagramSocket socket;
     private DatagramPacket answer;
     private SharedTimeSent time;
+    private TabelaEstado stateTable = new TabelaEstado();
 
     MonitorReceive(SharedTimeSent time, DatagramSocket socket) {
     	
@@ -83,7 +84,10 @@ class MonitorReceive extends Thread {
     
 	boolean moreStates = true;
 	BufferedReader reader;
-	String msgReceived;
+	String msgReceived, ID;
+	double ram, cpu;
+	long rtt, timeReceived, timeSent;
+	Scanner scanner;
 	
 	while (moreStates) {
 
@@ -98,26 +102,23 @@ class MonitorReceive extends Thread {
 		reader = new BufferedReader(new StringReader(msgReceived));
 
 		/** Timestamp when answer was received */
-		long timeReceived = System.currentTimeMillis();
+		timeReceived = System.currentTimeMillis();
 		
-		System.out.println("--> Resposta [Porta: " + answer.getPort() + " Endereço: " + answer.getAddress().getHostAddress() + "] <--" );
+		ID = answer.getAddress().getHostAddress() + ":" + answer.getPort();
 		
-		try {
-			System.out.println(" RAM: " + reader.readLine());
-			System.out.println(" CPU: " + reader.readLine());
+		scanner = new Scanner(msgReceived);
+
+		ram = Double.parseDouble(scanner.nextLine());
+		cpu = Double.parseDouble(scanner.nextLine());
 		
-			/** Timestamp when request was sent */
-			//long timeSent = Long.valueOf(reader.readLine());
-			long timeSent = this.time.getTimestamp();
+		/** Timestamp when request was sent */
+		timeSent = this.time.getTimestamp();
 
-			long rtt = timeReceived - timeSent;
+		rtt = timeReceived - timeSent;
 
-			System.out.println(" RTT: " + rtt);
-		}
-		catch (IOException e ) {
-			System.err.println(e.getMessage());
-		}
-
+		this.stateTable.updateState(ID, ram, cpu, rtt);
+		System.out.print("\033[H\033[2J");
+		System.out.print(this.stateTable.toString());
 	}
     }
 }

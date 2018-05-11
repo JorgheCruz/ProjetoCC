@@ -10,23 +10,23 @@ import java.util.Scanner;
 
 public class Estado {
 
-    private long ram;
+    private double ram;
     private double cpu;
     private long rtt;
     private float lb;
     private boolean available;
-   // private OperatingSystemMXBean os;
     
     public Estado(){
         this.lb = (float) 7.5;
         available = true;
-        updateEstado();
     }
     
-    public Estado(long ram, double cpu, long rtt){
+    public Estado(double ram, double cpu, long rtt){
         this.ram = ram;
         this.cpu = cpu;
         this.rtt = rtt;
+        this.lb = (float) 7.5;
+	this.available = true;
     }
     public double getCpu() {
         return cpu;
@@ -36,7 +36,7 @@ public class Estado {
         return lb;
     }
 
-    public long getRam() {
+    public double getRam() {
         return ram;
     }
 
@@ -52,27 +52,13 @@ public class Estado {
         this.lb = lb;
     }
 
-    public void setRam(long ram) {
+    public void setRam(double ram) {
         this.ram = ram;
     }
 
     public void setRtt(long rtt) {
         this.rtt = rtt;
     }
-    
-    public void updateEstado(){
-        int mb= 1024*1024;
-        OperatingSystemMXBean os = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
-        setCpu(os.getSystemLoadAverage());
-        Runtime instance = Runtime.getRuntime();
-        long availableRam = instance.freeMemory()/mb;
-        setRam(availableRam);
-        System.out.println("CPU Usage: " + os.getSystemLoadAverage() + "Free Ram :" + availableRam);
-
-        
-    }
-    
-    
 
     public String toString(){
         String resposta = ("Ram = " + this.getRam() + "\nCPU Usage: " + this.getCpu() + "\nRTT: " +this.getRtt());
