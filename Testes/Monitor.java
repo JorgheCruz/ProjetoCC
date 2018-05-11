@@ -1,5 +1,7 @@
 import java.io.IOException;
 import static java.lang.Thread.sleep;
+import java.io.BufferedReader;
+import java.io.StringReader;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
@@ -18,8 +20,9 @@ class MonitorSend extends Thread {
     private DatagramPacket packet;
     private InetAddress IP;
     private final int port = 8888;
+    private SharedTimeSent time;
 
-    MonitorSend(DatagramSocket socket, String address) throws IOException {
+    MonitorSend(SharedTimeSent time, DatagramSocket socket, String address) throws IOException {
     
         try{
             IP = InetAddress.getByName(address);
@@ -29,11 +32,7 @@ class MonitorSend extends Thread {
             System.err.println(e.getMessage());
         }
         
-        if (IP != null) {
-            String msg = "Send me information!";
-            packet = new DatagramPacket(msg.getBytes(), msg.length(), IP, port);
-        }
-
+	this.time = time;
 	this.socket = socket;
     }
 
@@ -42,12 +41,20 @@ class MonitorSend extends Thread {
 	boolean needStates = true;
         int sleeptime = 10000;
 
+	if (IP != null) {
+		byte[] buf = new byte[1];
+            	this.packet = new DatagramPacket(buf, buf.length, IP, port);
+        }
+
 	while (needStates) {
 		
+		this.time.setTimestamp(System.currentTimeMillis());
+
 		try {
-		socket.send(this.packet);
+			socket.send(this.packet);
+			System.out.println("!------[Pedido enviado]------!");
         	
-		sleep(sleeptime);
+			sleep(sleeptime);
 		}
 		catch(IOException|InterruptedException e) {	
             		System.err.println(e.getMessage());
@@ -60,33 +67,57 @@ class MonitorSend extends Thread {
 class MonitorReceive extends Thread {
 
     private final DatagramSocket socket;
-    DatagramPacket resposta;
+    private DatagramPacket answer;
+    private SharedTimeSent time;
 
-    MonitorReceive(DatagramSocket socket) {
+    MonitorReceive(SharedTimeSent time, DatagramSocket socket) {
     	
 	this.socket = socket;
+	this.time = time;
 	
 	byte[] aReceber = new byte[1024];
-	resposta = new DatagramPacket(aReceber, aReceber.length);
+	answer = new DatagramPacket(aReceber, aReceber.length);
     }
 
     public void run() {
     
 	boolean moreStates = true;
+	BufferedReader reader;
+	String msgReceived;
 	
 	while (moreStates) {
 
 		try {
-			socket.receive(resposta);
+			socket.receive(answer);
 		}
 		catch (IOException e) {
             		System.err.println(e.getMessage());
 		}
 
-		String received = new String(resposta.getData(), 0, resposta.getLength());
-		System.out.println(received);
-		System.out.println("Porta: " + resposta.getPort());
-		System.out.println("Endereço: " + resposta.getAddress().getHostAddress());
+		msgReceived = new String(answer.getData(), 0, answer.getLength());
+		reader = new BufferedReader(new StringReader(msgReceived));
+
+		/** Timestamp when answer was received */
+		long timeReceived = System.currentTimeMillis();
+		
+		System.out.println("--> Resposta [Porta: " + answer.getPort() + " Endereço: " + answer.getAddress().getHostAddress() + "] <--" );
+		
+		try {
+			System.out.println(" RAM: " + reader.readLine());
+			System.out.println(" CPU: " + reader.readLine());
+		
+			/** Timestamp when request was sent */
+			//long timeSent = Long.valueOf(reader.readLine());
+			long timeSent = this.time.getTimestamp();
+
+			long rtt = timeReceived - timeSent;
+
+			System.out.println(" RTT: " + rtt);
+		}
+		catch (IOException e ) {
+			System.err.println(e.getMessage());
+		}
+
 	}
     }
 }
@@ -95,14 +126,22 @@ public class Monitor {
     
     public static void main(String args[]) throws IOException, InterruptedException {
         
+	String address = "239.8.8.8";
 	DatagramSocket socket = new DatagramSocket();
-
-	Thread send = new MonitorSend(socket, "239.8.8.8");
-	Thread receive = new MonitorReceive(socket);
+	SharedTimeSent time = new SharedTimeSent();
+	
+	Thread send = new MonitorSend(time, socket, address);
+	Thread receive = new MonitorReceive(time, socket);
 	send.start();
 	receive.start();
-
-	
     }
         
+}
+
+class SharedTimeSent {
+
+	public volatile long timestamp;
+
+	public void setTimestamp(long ts) { timestamp = ts; }
+	public long getTimestamp() { return timestamp; }
 }
