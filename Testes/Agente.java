@@ -19,13 +19,13 @@ public class Agente {
    
 	private double ram;
         private double cpu;
+	private long delayTime;
 	private final double totalMemory;
 
     public Agente () {
         OperatingSystemMXBean os = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
 	this.totalMemory = (double) (os.getTotalPhysicalMemorySize() / (1024*1024));
     }	
-
         
     public void updateEstado(){
         
@@ -41,9 +41,10 @@ public class Agente {
         ram = (usedMemory / this.totalMemory) * 100;
         ram = Math.round(ram * 100) / 100.0d;
     }
+
     public String toString(){
 	
-	String resposta = (this.ram + "\n" + this.cpu + "\n");
+	String resposta = (this.ram + "\n" + this.cpu + "\n" + this.delayTime + "\n");
         return resposta;
     }
 
@@ -67,7 +68,8 @@ public class Agente {
 		String msgReceived = new String(request.getData(), 0, request.getLength()); 
 
 		/** Delay answer between 0 and 10 ms */
-		sleep((long) (Math.random() * 10));
+		agente.delayTime = (long) (Math.random() * 10);
+		sleep(agente.delayTime);
 
 		agente.updateEstado();
 		String msg = agente.toString();

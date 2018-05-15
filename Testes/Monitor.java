@@ -22,8 +22,9 @@ class MonitorSend extends Thread {
     private InetAddress IP;
     private final int port = 8888;
     private SharedTimeSent time;
+    private TabelaEstado stateTable;
 
-    MonitorSend(SharedTimeSent time, DatagramSocket socket, String address) throws IOException {
+    MonitorSend(SharedTimeSent time, TabelaEstado stateTable, DatagramSocket socket, String address) throws IOException {
     
         try{
             IP = InetAddress.getByName(address);
@@ -35,12 +36,13 @@ class MonitorSend extends Thread {
         
 	this.time = time;
 	this.socket = socket;
+	this.stateTable = stateTable;
     }
 
     public void run() {
 
 	boolean needStates = true;
-        int sleeptime = 10000;
+        int sleeptime = 5000;
 
 	if (IP != null) {
 		byte[] buf = new byte[1];
@@ -59,6 +61,9 @@ class MonitorSend extends Thread {
 		catch(IOException|InterruptedException e) {	
             		System.err.println(e.getMessage());
 		}
+		
+		System.out.print("\033[H\033[2J");
+		System.out.print(this.stateTable.toString());
 	}
     }
 
@@ -69,12 +74,13 @@ class MonitorReceive extends Thread {
     private final DatagramSocket socket;
     private DatagramPacket answer;
     private SharedTimeSent time;
-    private TabelaEstado stateTable = new TabelaEstado();
+    private TabelaEstado stateTable;
 
-    MonitorReceive(SharedTimeSent time, DatagramSocket socket) {
+    MonitorReceive(SharedTimeSent time, TabelaEstado stateTable, DatagramSocket socket) {
     	
 	this.socket = socket;
 	this.time = time;
+	this.stateTable = stateTable;
 	
 	byte[] aReceber = new byte[1024];
 	answer = new DatagramPacket(aReceber, aReceber.length);
@@ -86,7 +92,7 @@ class MonitorReceive extends Thread {
 	BufferedReader reader;
 	String msgReceived, ID;
 	double ram, cpu;
-	long rtt, timeReceived, timeSent;
+	long rtt, timeReceived, timeSent, delayTime;
 	Scanner scanner;
 	
 	while (moreStates) {
@@ -110,15 +116,14 @@ class MonitorReceive extends Thread {
 
 		ram = Double.parseDouble(scanner.nextLine());
 		cpu = Double.parseDouble(scanner.nextLine());
+		delayTime = Long.parseLong(scanner.nextLine());
 		
 		/** Timestamp when request was sent */
 		timeSent = this.time.getTimestamp();
 
-		rtt = timeReceived - timeSent;
+		rtt = timeReceived - timeSent - delayTime;
 
 		this.stateTable.updateState(ID, ram, cpu, rtt);
-		System.out.print("\033[H\033[2J");
-		System.out.print(this.stateTable.toString());
 	}
     }
 }
@@ -130,9 +135,10 @@ public class Monitor {
 	String address = "239.8.8.8";
 	DatagramSocket socket = new DatagramSocket();
 	SharedTimeSent time = new SharedTimeSent();
+	TabelaEstado stateTable = new TabelaEstado();
 	
-	Thread send = new MonitorSend(time, socket, address);
-	Thread receive = new MonitorReceive(time, socket);
+	Thread send = new MonitorSend(time, stateTable, socket, address);
+	Thread receive = new MonitorReceive(time, stateTable, socket);
 	send.start();
 	receive.start();
     }
