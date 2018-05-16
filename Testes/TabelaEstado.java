@@ -77,6 +77,13 @@ public class TabelaEstado {
 		this.tabela.put(ID, state);
 	}
     }
+    public void updateBandwith(String ID,int EstimatedBandwidth){
+        Estado state= tabela.get(ID);
+        int newBandwidth;
+        if(state.getBw() == 0) newBandwidth= EstimatedBandwidth;
+        else newBandwidth = (int)(0.125* EstimatedBandwidth + 0.875 * state.getBw());
+        state.setBw(newBandwidth);
+    }
     
     public String getBestServer(int packetSize) {
         

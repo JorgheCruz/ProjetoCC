@@ -8,11 +8,11 @@ public class Estado {
     private double ram;
     private double cpu;
     private long rtt;
-    private float lb;
+    private int bw;
     private boolean available;
     
     public Estado(){
-        this.lb = (float) 7.5;
+        this.bw = 0;
         available = true;
     }
     
@@ -20,15 +20,15 @@ public class Estado {
         this.ram = ram;
         this.cpu = cpu;
         this.rtt = rtt;
-        this.lb = (float) 7.5;
+        this.bw = 0;
 	this.available = true;
     }
     public double getCpu() {
         return cpu;
     }
 
-    public float getLb() {
-        return lb;
+    public float getBw() {
+        return bw;
     }
 
     public double getRam() {
@@ -43,8 +43,8 @@ public class Estado {
         this.cpu = cpu;
     }
 
-    public void setLb(float lb) {
-        this.lb = lb;
+    public void setBw(int bw) {
+        this.bw = bw;
     }
 
     public void setRam(double ram) {
