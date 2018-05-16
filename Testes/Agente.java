@@ -2,14 +2,11 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
-import static java.sql.DriverManager.println;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import static java.lang.Thread.sleep;
 import java.lang.management.ManagementFactory;
 import com.sun.management.OperatingSystemMXBean;
-import java.text.DecimalFormat;
-import java.math.RoundingMode;
 
 /**
  *

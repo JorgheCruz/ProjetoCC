@@ -1,8 +1,3 @@
-import java.io.IOException;
-import java.lang.management.OperatingSystemMXBean;
-import java.lang.Runtime;
-import java.lang.management.ManagementFactory;
-import java.util.Scanner;
 /**
  *
  * @author treishy

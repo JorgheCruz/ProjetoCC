@@ -1,10 +1,6 @@
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.lang.String;
-import java.io.StringReader;
-import java.io.BufferedReader;
-import java.io.IOException;
 import java.util.Collections;
 
 /**
@@ -80,6 +76,11 @@ public class TabelaEstado {
 		state = new Estado(ram, cpu, rtt);
 		this.tabela.put(ID, state);
 	}
+    }
+    
+    public String getBestServer(int packetSize) {
+        
+        return null;
     }
 }
 
