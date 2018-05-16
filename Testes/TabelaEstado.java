@@ -77,7 +77,7 @@ public class TabelaEstado {
 		this.tabela.put(ID, state);
 	}
     }
-    public void updateBandwith(String ID,int EstimatedBandwidth){
+    public void updateBandwidth(String ID,int EstimatedBandwidth){
         Estado state= tabela.get(ID);
         int newBandwidth;
         if(state.getBw() == 0) newBandwidth= EstimatedBandwidth;
@@ -86,7 +86,7 @@ public class TabelaEstado {
     }
     
     public String getBestServer(int packetSize) {
-        
+        //setAvailable(0);
         return null;
     }
 }
