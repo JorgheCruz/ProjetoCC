@@ -18,10 +18,32 @@ class dealClient extends Thread {
     Socket connectionClient;
     DataInputStream dIn;
     DataOutputStream dOut;
+    TabelaEstado stateTable;
     
     public dealClient(Socket connection) throws IOException {
         this.connectionClient = connection;
         dIn = new DataInputStream(connection.getInputStream());
+    }
+    
+    public int sendDataToServer(Socket connectionServer, byte[] message, int length) throws IOException {
+        
+        this.dOut = new DataOutputStream(connectionServer.getOutputStream());
+            
+        this.dOut.writeInt(message.length);
+                
+        long start = System.currentTimeMillis();
+        this.dOut.write(message);
+        long end = System.currentTimeMillis();
+                
+        return (int) (1000 * (length / (end - start))); 
+    }
+    
+    public void confirmTransfer(Socket connectionClient) throws IOException {
+        
+        String msg = "Transfer completed!";
+        DataOutputStream dOut = new DataOutputStream(connectionClient.getOutputStream());
+        
+        dOut.writeChars(msg);
     }
     
     @Override
@@ -38,7 +60,7 @@ class dealClient extends Thread {
                 byte[] message = new byte[length];
                 dIn.readFully(message, 0, message.length);
             
-                String ID = stateTable.getBestServer(length);
+                String ID = this.stateTable.getBestServer(length);
 
                 serverID = ID.split(":");
                 
@@ -46,15 +68,12 @@ class dealClient extends Thread {
                 port = Integer.parseInt(serverID[1]);
                 
                 Socket connectionServer = new Socket(IP, port);
-                dOut = new DataOutputStream(connectionServer.getOutputStream());
-            
-                dOut.writeInt(message.length);
-                dOut.write(message);
                 
-                String msg = "Transfer completed!";
-                dOut = new DataOutputStream(connectionClient.getOutputStream());
-                dOut.writeChars(msg);
+                int bandwidth = this.sendDataToServer(connectionServer, message, length);
+                this.stateTable.updateBandwidth(ID, bandwidth);
                 
+                this.confirmTransfer(connectionClient);
+
                 connectionServer.close();
             }
         } catch (IOException | NumberFormatException ex) {
