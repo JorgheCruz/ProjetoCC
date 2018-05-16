@@ -10,9 +10,12 @@ import java.util.Collections;
 public class TabelaEstado {
 
     private Map<String,Estado> tabela;
+    private int maxBW;
+    private long maxRTT;
 
     public TabelaEstado() {
         tabela = new HashMap<String,Estado>();
+        averageBW = 0;
     }
     public Map<String, Estado> getTabela() {
         return tabela;
@@ -24,6 +27,9 @@ public class TabelaEstado {
     
     public void updateEstado(String ID, Estado newState){
         tabela.put(ID,newState);
+        if (newState.getBw()>maxBW) maxBW =newState.getBW();
+        if (newState.getRtt()>maxRTT) maxRTT =newState.getRtt();
+
     }
     
     public String toString() {	
@@ -59,8 +65,7 @@ public class TabelaEstado {
 
     public void updateState(String ID, double ram, double cpu, long rtt) {
     	
-	Estado state;
-
+	Estado state; 
 	if (this.tabela.containsKey(ID)) {
 		state = tabela.get(ID);
 		long oldrtt = state.getRtt();
@@ -78,6 +83,7 @@ public class TabelaEstado {
 	}
     }
     public void updateBandwidth(String ID,int EstimatedBandwidth){
+        //trocar para valores do stor dados a dividir por slot time
         Estado state= tabela.get(ID);
         int newBandwidth;
         if(state.getBw() == 0) newBandwidth= EstimatedBandwidth;
@@ -87,19 +93,33 @@ public class TabelaEstado {
     
     public String getBestServer(int packetSize) {
         Iterator iterator = tabela.keySet().iterator();
-        String maxID,ID;
+        String maxID=null,ID;
         Estado state;
         float maxScore=0,score;
         while (iterator.hasNext()) {
            ID = (String) iterator.next();
            state = tabela.get(ID);
-           score = getScore(state);
-           if (score > maxScore) {
-               maxScore = score;
-               maxID = ID;
+           if(state.isAvailable()){
+               score = getScore(state);
+
+                if (score > maxScore) {
+                    maxScore = score;
+                    maxID = ID;
+                }
            }
         }
-        return ID;
+        return maxID;
+    }
+    
+    public float getScore(Estado state){
+        double ram = state.getRam();
+        double cpu = state.getRam();
+        long rtt =state.getRam();
+        int bw = state.getRam();
+        int base = 100;
+        if (bw == 0) base=200;
+        float score = (float) (ram + cpu + 100*(1- (rtt/maxRTT)) + 100 *(bw/maxBW));
+        return score;
     }
         //setAvailable(0);
 }
