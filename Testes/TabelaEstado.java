@@ -86,8 +86,21 @@ public class TabelaEstado {
     }
     
     public String getBestServer(int packetSize) {
-        //setAvailable(0);
-        return null;
+        Iterator iterator = tabela.keySet().iterator();
+        String maxID,ID;
+        Estado state;
+        float maxScore=0,score;
+        while (iterator.hasNext()) {
+           ID = (String) iterator.next();
+           state = tabela.get(ID);
+           score = getScore(state);
+           if (score > maxScore) {
+               maxScore = score;
+               maxID = ID;
+           }
+        }
+        return ID;
     }
+        //setAvailable(0);
 }
 
