@@ -80,7 +80,12 @@ class dealClient extends Thread {
             Logger.getLogger(dealClient.class.getName()).log(Level.SEVERE, null, ex);
         }
         
-        this.connectionClient.close();
+        try {
+            this.connectionClient.close();
+        } catch (IOException ex) {
+            Logger.getLogger(dealClient.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
     }
 }
 
