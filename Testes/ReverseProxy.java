@@ -5,6 +5,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -13,94 +14,123 @@ import java.util.logging.Logger;
  * @author treishy
  */
 
-class dealClient extends Thread {
+
+class ClientToServer extends Thread {
     
-    Socket connectionClient;
+    Socket client, server;
     DataInputStream dIn;
     DataOutputStream dOut;
+    String serverID;
     TabelaEstado stateTable;
     
-    public dealClient(Socket connection) throws IOException {
-        this.connectionClient = connection;
-        dIn = new DataInputStream(connection.getInputStream());
-    }
-    
-    public int sendDataToServer(Socket connectionServer, byte[] message, int length) throws IOException {
+    public ClientToServer(Socket client, Socket server, String serverID, TabelaEstado stateTable) {
         
-        this.dOut = new DataOutputStream(connectionServer.getOutputStream());
-            
-        this.dOut.writeInt(message.length);
-                
-        long start = System.currentTimeMillis();
-        this.dOut.write(message);
-        long end = System.currentTimeMillis();
-                
-        return (int) (1000 * (length / (end - start))); 
-    }
-    
-    public void confirmTransfer(Socket connectionClient) throws IOException {
-        
-        String msg = "Transfer completed!";
-        DataOutputStream dOut = new DataOutputStream(connectionClient.getOutputStream());
-        
-        dOut.writeChars(msg);
+        this.stateTable = stateTable;
+        this.client = client;
+        this.server = server;
+        this.dIn = new DataInputStream(client.getInputStream());
+        this.dOut = new DataOutputStream(server.getOutputStream());
+        this.serverID = serverID;
     }
     
     @Override
     public void run() {
         
-        int length, port;
-        String[] serverID;
-        InetAddress IP;
+        int length;
         
         try {
             length = dIn.readInt();
             
-            if (length > 0) {
+            while (length > 0) {
+                
                 byte[] message = new byte[length];
                 dIn.readFully(message, 0, message.length);
             
-                String ID = this.stateTable.getBestServer(length);
-
-                serverID = ID.split(":");
+                dOut.writeInt(message.length);
+                dOut.write(message);    
+                stateTable.addBytes(serverID, (long) length);
                 
-                IP = InetAddress.getByName(serverID[0]);
-                port = Integer.parseInt(serverID[1]);
-                
-                Socket connectionServer = new Socket(IP, port);
-                
-                int bandwidth = this.sendDataToServer(connectionServer, message, length);
-                this.stateTable.updateBandwidth(ID, bandwidth);
-                
-                this.confirmTransfer(connectionClient);
-
-                connectionServer.close();
+                length = dIn.readInt();
             }
-        } catch (IOException | NumberFormatException ex) {
-            Logger.getLogger(dealClient.class.getName()).log(Level.SEVERE, null, ex);
+            
+        } catch (IOException ex) {
+            try {
+                client.close();
+                server.close();
+            } catch (IOException ex1) {
+                Logger.getLogger(ClientToServer.class.getName()).log(Level.SEVERE, null, ex1);
+            }
         }
+    }
+}
+
+class ServerToClient extends Thread {
+    
+    DataInputStream dIn;
+    DataOutputStream dOut;
+    
+    public ServerToClient(Socket client, Socket server) throws IOException {
+        
+        this.dIn = new DataInputStream(server.getInputStream());
+        this.dOut = new DataOutputStream(client.getOutputStream());
+    }
+    
+    @Override
+    public void run() {
+        
+        int length;
         
         try {
-            this.connectionClient.close();
+            length = dIn.readInt();
+            
+            while (length > 0) {
+                
+                byte[] message = new byte[length];
+                dIn.readFully(message, 0, message.length);
+            
+                dOut.writeInt(message.length);
+                dOut.write(message);
+                
+                length = dIn.readInt();
+            }
+            
         } catch (IOException ex) {
-            Logger.getLogger(dealClient.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ClientToServer.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
     }
 }
 
 public class ReverseProxy {
     
+    public static Socket getServerSocket(String ID) throws UnknownHostException, IOException {
+        
+        String[] serverID = ID.split(":");
+                
+        InetAddress IP = InetAddress.getByName(serverID[0]);
+        int port = Integer.parseInt(serverID[1]);
+                
+        return (new Socket(IP, port));
+    }
+    
     public static void main(String[] args) throws SocketException, IOException, InterruptedException {
 
-        Monitor monitor = new Monitor();
+        InetAddress IP;
+        TabelaEstado stateTable = new TabelaEstado();
+        
+        Monitor monitor = new Monitor(stateTable);
         monitor.start("239.8.8.8");
 
-	ServerSocket welcomeSocket = new ServerSocket(80);
+	ServerSocket welcomeSocket = new ServerSocket(80);        
         
         while (true) {
-            Socket connectionSocket = welcomeSocket.accept();
-            Thread dealClient = new dealClient(connectionSocket);
+            
+            Socket client = welcomeSocket.accept();
+                        
+            String serverID = stateTable.getBestServer();
+            Socket server = getServerSocket(serverID);
+            
+            Thread clientToServer = new ClientToServer(client, server, serverID, stateTable);
+            Thread serverToClient = new ServerToClient(client, server);
         }
     }
 }
