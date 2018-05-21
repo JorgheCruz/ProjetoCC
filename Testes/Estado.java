@@ -29,7 +29,7 @@ public class Estado {
         return cpu;
     }
 
-    public float getBw() {
+    public int getBw() {
         return bw;
     }
 
@@ -51,7 +51,7 @@ public class Estado {
         timeout++;
     }
     
-    public void resetTimetout(){
+    public void resetTimeout(){
         timeout=0;
     }
     

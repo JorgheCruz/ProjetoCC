@@ -48,6 +48,8 @@ public class Agente {
     public static void main (String args[]) throws SocketException, IOException, InterruptedException {
         
 	Agente agente = new Agente();
+        String IP = args[0];
+        String port = args[1];
 
         MulticastSocket socketToReceive = new MulticastSocket(8888);
 	InetAddress group = InetAddress.getByName("239.8.8.8"), monitorAddress;

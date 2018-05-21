@@ -23,7 +23,7 @@ class ClientToServer extends Thread {
     String serverID;
     TabelaEstado stateTable;
     
-    public ClientToServer(Socket client, Socket server, String serverID, TabelaEstado stateTable) {
+    public ClientToServer(Socket client, Socket server, String serverID, TabelaEstado stateTable) throws IOException {
         
         this.stateTable = stateTable;
         this.client = client;

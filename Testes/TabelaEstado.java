@@ -29,7 +29,7 @@ public class TabelaEstado {
     
     public void updateEstado(String ID, Estado newState){
         tabela.put(ID,newState);
-        if (newState.getBw()>maxBW) maxBW =newState.getBW();
+        if (newState.getBw()>maxBW) maxBW =newState.getBw();
         if (newState.getRtt()>maxRTT) maxRTT =newState.getRtt();
 
     }
@@ -66,9 +66,12 @@ public class TabelaEstado {
     }
     
     public void incTimeout(){
+        
         Iterator iterator = tabela.keySet().iterator();
+        Estado state;
         String ID;
-        int timeout
+        int timeout;
+        
 	while (iterator.hasNext()) {
            ID = (String) iterator.next();
            state = tabela.get(ID);
@@ -105,28 +108,33 @@ public class TabelaEstado {
 	}
     }
     public void addBytes(String ID,long bytes){
-       if (this.tabela.containsKey(ID)) {
+        
+        Estado state;
+        
+        if (this.tabela.containsKey(ID)) {
 		state = tabela.get(ID);
                 state.addBytes(bytes);
-       }
+        }
     }
     
-    public String getBestServer(int packetSize) {
+    public String getBestServer() {
+        
         Iterator iterator = tabela.keySet().iterator();
-        String maxID=null,ID;
+        String maxID = null, ID;
         Estado state;
-        float maxScore=0,score;
+        float maxScore = 0, score;
+        
         while (iterator.hasNext()) {
-           ID = (String) iterator.next();
-           state = tabela.get(ID);
-           if(state.isAvailable()){
-               score = getScore(state);
+            ID = (String) iterator.next();
+            state = tabela.get(ID);
+            if (state.isAvailable()) {
+                score = getScore(state);
 
                 if (score > maxScore) {
                     maxScore = score;
                     maxID = ID;
                 }
-           }
+            }
         }
         return maxID;
     }
