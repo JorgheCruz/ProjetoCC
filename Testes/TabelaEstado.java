@@ -12,10 +12,12 @@ public class TabelaEstado {
     private Map<String,Estado> tabela;
     private int maxBW;
     private long maxRTT;
+    private int slotTime;
 
     public TabelaEstado() {
         tabela = new HashMap<String,Estado>();
-        averageBW = 0;
+        //averageBW = 0;
+        slotTime=10;
     }
     public Map<String, Estado> getTabela() {
         return tabela;
@@ -69,17 +71,23 @@ public class TabelaEstado {
 	if (this.tabela.containsKey(ID)) {
 		state = tabela.get(ID);
 		long oldrtt = state.getRtt();
-
+                int oldbw= state.getBw();
+                int bw;
 		/** Calculate new RTT */
 		rtt = (long) (0.125 * rtt + (0.875) * oldrtt);
-		
+		bw = (int) (0.125 * ((int) (state.getBytesSent())/this.slotTime)  + 0.875 * oldbw);
 		state.setRam(ram);
 		state.setCpu(cpu);
 		state.setRtt(rtt);
+                state.setBw(bw);
+                state.resetBytes();
+                state.resetTimeout();
+                state.setAvailable();
+                this.updateEstado(ID, state);
 	}
 	else {
 		state = new Estado(ram, cpu, rtt);
-		this.tabela.put(ID, state);
+		this.updateEstado(ID,state);
 	}
     }
     public void updateBandwidth(String ID,int EstimatedBandwidth){

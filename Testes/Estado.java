@@ -10,6 +10,8 @@ public class Estado {
     private long rtt;
     private int bw;
     private boolean available;
+    private int timeout = 0;
+    private long bytesSent = 0;
     
     public Estado(){
         this.bw = 0;
@@ -38,7 +40,29 @@ public class Estado {
     public long getRtt() {
         return rtt;
     }
-
+    
+    public long getBytesSent(){ return bytesSent;}
+    
+    public int getTimeout(){
+        return timeout;
+    }
+    
+    public void increaseTimeout(){
+        timeout++;
+    }
+    
+    public void resetTimetout(){
+        timeout=0;
+    }
+    
+    public void resetBytes(){
+        bytesSent = 0;
+    }
+    
+    public void addBytes(long bytes) {
+        bytesSent+= bytes;
+    }
+    
     public void setCpu(double cpu) {
         this.cpu = cpu;
     }
@@ -53,6 +77,14 @@ public class Estado {
 
     public void setRtt(long rtt) {
         this.rtt = rtt;
+    }
+    
+    public void setAvailable(){
+        available=true;
+    }
+    
+    public void setUnavailable(){
+        available=false;
     }
 
     public String toString(){
