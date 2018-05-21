@@ -134,10 +134,10 @@ public class Monitor {
     private final SharedTimeSent time;
     private final TabelaEstado stateTable;
     
-    public Monitor() throws SocketException {
+    public Monitor(TabelaEstado stateTable) throws SocketException {
         this.socket = new DatagramSocket();
         this.time = new SharedTimeSent();
-        this.stateTable = new TabelaEstado();
+        this.stateTable = stateTable;
     }
 
     public void start(String address) throws IOException, InterruptedException {
