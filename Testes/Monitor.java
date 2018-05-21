@@ -110,10 +110,9 @@ class MonitorReceive extends Thread {
                 /** Timestamp when answer was received */
                 timeReceived = System.currentTimeMillis();
 
-                ID = answer.getAddress().getHostAddress() + ":" + answer.getPort();
-
                 scanner = new Scanner(msgReceived);
-
+                
+                ID = scanner.nextLine();
                 ram = Double.parseDouble(scanner.nextLine());
                 cpu = Double.parseDouble(scanner.nextLine());
                 delayTime = Long.parseLong(scanner.nextLine());

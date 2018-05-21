@@ -43,21 +43,25 @@ public class TabelaEstado {
 
 	//str.append('\r');
 	str
-		.append("| IP:PORTA              | RAM     | CPU     | RTT |")
+		.append("| IP:PORTA              | RAM     | CPU     | RTT | BW  | Availability |")
 		.append('\n')
-		.append("---------------------------------------------------");
+		.append("------------------------------------------------------------------------");
 
         
 	while (iterator.hasNext()) {
-           ID = (String) iterator.next();
-           state = tabela.get(ID);
-           str
-        	   .append('\n')
-	   	   .append(String.format("| %s", ID))
-		   .append(String.join("", Collections.nCopies( 22 - ID.length() , " ")))
-		   .append(String.format("| %.2f %% ", state.getRam()))
-		   .append(String.format("| %.2f %% ", state.getCpu()))
-		   .append(String.format("| %-3d |", state.getRtt()));
+            ID = (String) iterator.next();
+            state = tabela.get(ID);
+            str
+                    .append('\n')
+                    .append(String.format("| %s", ID))
+                    .append(String.join("", Collections.nCopies( 22 - ID.length() , " ")))
+                    .append(String.format("| %.2f %% ", state.getRam()))
+                    .append(String.format("| %.2f %% ", state.getCpu()))
+                    .append(String.format("| %-3d ", state.getRtt()))
+                    .append(String.format("| %-3d ", state.getBw()));
+            
+            if (state.isAvailable()) str.append("|     true     |");
+            else str.append("|     false    |");
 	}
 
 	str.append('\n');
