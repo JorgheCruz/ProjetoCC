@@ -86,6 +86,8 @@ public class Estado {
     public void setUnavailable(){
         available=false;
     }
+    
+    public boolean isAvailable(){return available;}
 
     public String toString(){
         String resposta = ("Ram = " + this.getRam() + "\nCPU Usage: " + this.getCpu() + "\nRTT: " +this.getRtt());
