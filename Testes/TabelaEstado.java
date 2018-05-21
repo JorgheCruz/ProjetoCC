@@ -64,6 +64,20 @@ public class TabelaEstado {
 
         return str.toString();
     }
+    
+    public void incTimeout(){
+        Iterator iterator = tabela.keySet().iterator();
+        String ID;
+        int timeout
+	while (iterator.hasNext()) {
+           ID = (String) iterator.next();
+           state = tabela.get(ID);
+           state.increaseTimeout();
+           timeout= state.getTimeout();
+           if (timeout > 6) tabela.remove(ID);
+           else if (timeout > 3) state.setUnavailable();
+        }
+    }
 
     public void updateState(String ID, double ram, double cpu, long rtt) {
     	
