@@ -90,13 +90,11 @@ public class TabelaEstado {
 		this.updateEstado(ID,state);
 	}
     }
-    public void updateBandwidth(String ID,int EstimatedBandwidth){
-        //trocar para valores do stor dados a dividir por slot time
-        Estado state= tabela.get(ID);
-        int newBandwidth;
-        if(state.getBw() == 0) newBandwidth= EstimatedBandwidth;
-        else newBandwidth = (int)(0.125* EstimatedBandwidth + 0.875 * state.getBw());
-        state.setBw(newBandwidth);
+    public void addBytes(String ID,long bytes){
+       if (this.tabela.containsKey(ID)) {
+		state = tabela.get(ID);
+                state.addBytes(bytes);
+       }
     }
     
     public String getBestServer(int packetSize) {
