@@ -113,9 +113,9 @@ public class TabelaEstado {
     
     public float getScore(Estado state){
         double ram = state.getRam();
-        double cpu = state.getRam();
-        long rtt =state.getRam();
-        int bw = state.getRam();
+        double cpu = state.getCpu();
+        long rtt =state.getRtt();
+        int bw = state.getBw();
         int base = 100;
         if (bw == 0) base=200;
         float score = (float) (ram + cpu + 100*(1- (rtt/maxRTT)) + 100 *(bw/maxBW));
