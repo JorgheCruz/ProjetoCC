@@ -32,11 +32,11 @@ public class Agente {
         int cores = os.getAvailableProcessors();
 	double loadAvg = (double) os.getSystemLoadAverage();	
 	cpu = (loadAvg / cores) * 100;
-	cpu = Math.round(cpu * 100) / 100.0d;
+	cpu = 100 - Math.round(cpu * 100) / 100.0d;
 
         double usedMemory = (double) ((this.totalMemory - (os.getFreePhysicalMemorySize() / MB)));
         ram = (usedMemory / this.totalMemory) * 100;
-        ram = Math.round(ram * 100) / 100.0d;
+        ram = 100 - Math.round(ram * 100) / 100.0d;
     }
 
     public String toString(){

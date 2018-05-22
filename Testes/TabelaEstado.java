@@ -26,10 +26,11 @@ public class TabelaEstado {
         this.tabela = tabela;
     }
     
-    public void updateEstado(String ID, Estado newState){
+    public void updateEstado(String ID, Estado newState) { // TODO: Update Name!
+        
         tabela.put(ID,newState);
-        if (newState.getBw()>maxBW) maxBW = newState.getBw();
-        if (newState.getRtt()>maxRTT) maxRTT = newState.getRtt();
+        if (newState.getBw() > maxBW) maxBW = newState.getBw();
+        if (newState.getRtt() > maxRTT) maxRTT = newState.getRtt();
 
     }
     
@@ -79,7 +80,7 @@ public class TabelaEstado {
            ID = (String) iterator.next();
            state = tabela.get(ID);
            state.increaseTimeout();
-           timeout= state.getTimeout();
+           timeout = state.getTimeout();
            if (timeout > 6) tabela.remove(ID);
            else if (timeout > 3) state.setUnavailable();
         }
@@ -93,6 +94,7 @@ public class TabelaEstado {
 		long oldrtt = state.getRtt();
                 int oldbw= state.getBw();
                 int bw;
+                
 		/** Calculate new RTT */
 		rtt = (long) (0.125 * rtt + (0.875) * oldrtt);
 		bw = (int) (0.125 * ((int) (state.getBytesSent())/this.slotTime)  + 0.875 * oldbw);
@@ -102,6 +104,7 @@ public class TabelaEstado {
                 state.setBw(bw);
                 state.resetBytes();
                 state.resetTimeout();
+                state.resetUsed();
                 state.setAvailable();
                 this.updateEstado(ID, state);
 	}
@@ -139,19 +142,25 @@ public class TabelaEstado {
                 }
             }
         }
+        
+        state = tabela.get(maxID);
+        state.incUsed();
         return maxID;
     }
     
     public float getScore(Estado state){
+        
         double ram = state.getRam();
         double cpu = state.getCpu();
-        long rtt =state.getRtt();
+        long rtt = state.getRtt();
         int bw = state.getBw();
+        int uses = state.getUsed();
         int base = 100;
-        if (bw == 0) base=200;
-        float score = (float) (ram + cpu + 100*(1- (rtt/maxRTT)) + 100 *(bw/maxBW));
+        
+        if (bw == 0) base = 200;
+        
+        float score = (float) (ram + cpu + 100 * (1 - (rtt/maxRTT)) + 100 * (bw / maxBW) - 20 * uses);
         return score;
     }
-        //setAvailable(0);
 }
 

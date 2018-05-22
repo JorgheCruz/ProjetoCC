@@ -8,6 +8,8 @@ import java.net.UnknownHostException;
 import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.util.Scanner;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  *
@@ -41,7 +43,7 @@ class MonitorSend extends Thread {
     public void run() {
 
         boolean needStates = true;
-        int sleeptime = 5000;
+        int sleeptime = 10000;
         
         if (IP != null) {
                 byte[] buf = new byte[1];
@@ -145,6 +147,11 @@ public class Monitor {
         Thread receive = new MonitorReceive(time, stateTable, socket);
         send.start();
         receive.start();
+        
+        TimerTask timerTask = new MyTimerTask(stateTable);
+        Timer timer = new Timer(true);
+        timer.scheduleAtFixedRate(timerTask, 10000, 10000);
+        System.out.println("TimerTask Arrancou");
     }
 
 }
@@ -155,4 +162,17 @@ class SharedTimeSent {
 
         public void setTimestamp(long ts) { timestamp = ts; }
         public long getTimestamp() { return timestamp; }
+}
+
+class MyTimerTask extends TimerTask {
+    
+    private TabelaEstado stateTable;
+    
+    MyTimerTask(TabelaEstado newStateTable){
+        stateTable=newStateTable;
+    }
+    
+    public void run(){
+        stateTable.incTimeout();
+    }
 }

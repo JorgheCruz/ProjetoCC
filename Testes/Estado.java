@@ -12,6 +12,7 @@ public class Estado {
     private boolean available;
     private int timeout = 0;
     private long bytesSent = 0;
+    private int usedCount = 0;
     
     public Estado(){
         this.bw = 0;
@@ -41,14 +42,22 @@ public class Estado {
         return rtt;
     }
     
-    public long getBytesSent(){ return bytesSent;}
+    public long getBytesSent(){ 
+        return bytesSent;}
     
     public int getTimeout(){
         return timeout;
     }
+    public int getUsed() {
+        return usedCount;
+    }
     
     public void increaseTimeout(){
         timeout++;
+    }
+    
+    public void increaseUsed(){
+        usedCount++;
     }
     
     public void resetTimeout(){
@@ -57,6 +66,10 @@ public class Estado {
     
     public void resetBytes(){
         bytesSent = 0;
+    }
+    
+    public void resetUsed(){
+        usedCount = 0;
     }
     
     public void addBytes(long bytes) {
