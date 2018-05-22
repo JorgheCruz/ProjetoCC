@@ -43,9 +43,9 @@ public class TabelaEstado {
 
 	//str.append('\r');
 	str
-		.append("| IP:PORTA              | RAM     | CPU     | RTT | BW  | Availability |")
+		.append("| IP:PORTA              | RAM     | CPU     | RTT | BW  | Availability | UsedCount | TimeoutCount |")
 		.append('\n')
-		.append("------------------------------------------------------------------------");
+		.append("---------------------------------------------------------------------------------------------------");
 
         
 	while (iterator.hasNext()) {
@@ -61,7 +61,11 @@ public class TabelaEstado {
                     .append(String.format("| %-3d ", state.getBw()));
             
             if (state.isAvailable()) str.append("|     true     |");
-            else str.append("|     false    |");
+            else str.append("|     false    ");
+            
+            str
+                    .append(String.format("|    %-2d      ", state.getUsed()))
+                    .append(String.format("|      %-2d       |", state.getUsed()));
 	}
 
 	str.append('\n');
@@ -144,7 +148,7 @@ public class TabelaEstado {
         }
         
         state = tabela.get(maxID);
-        state.incUsed();
+        state.increaseUsed();
         return maxID;
     }
     

@@ -40,7 +40,7 @@ public class Agente {
     }
 
     public String toString(){
-	
+
 	String resposta = (this.ram + "\n" + this.cpu + "\n" + this.delayTime + "\n");
         return resposta;
     }
