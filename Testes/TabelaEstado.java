@@ -10,13 +10,12 @@ import java.util.Collections;
 public class TabelaEstado {
 
     private Map<String,Estado> tabela;
-    private int maxBW;
-    private long maxRTT;
+    private int maxBW = 50;
+    private long maxRTT = 1;
     private int slotTime;
 
     public TabelaEstado() {
         tabela = new HashMap<String,Estado>();
-        //averageBW = 0;
         slotTime=10;
     }
     public Map<String, Estado> getTabela() {
@@ -29,8 +28,8 @@ public class TabelaEstado {
     
     public void updateEstado(String ID, Estado newState){
         tabela.put(ID,newState);
-        if (newState.getBw()>maxBW) maxBW =newState.getBw();
-        if (newState.getRtt()>maxRTT) maxRTT =newState.getRtt();
+        if (newState.getBw()>maxBW) maxBW = newState.getBw();
+        if (newState.getRtt()>maxRTT) maxRTT = newState.getRtt();
 
     }
     
