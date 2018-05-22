@@ -18,6 +18,7 @@ public class TabelaEstado {
         tabela = new HashMap<String,Estado>();
         slotTime=10;
     }
+    
     public Map<String, Estado> getTabela() {
         return tabela;
     }
@@ -43,9 +44,9 @@ public class TabelaEstado {
 
 	//str.append('\r');
 	str
-		.append("| IP:PORTA              | RAM     | CPU     | RTT | BW  | Availability | UsedCount | TimeoutCount |")
+		.append("| IP:PORTA              | RAM     | CPU     | RTT |  BW   | Availability | UsedCount | TimeoutCount |")
 		.append('\n')
-		.append("---------------------------------------------------------------------------------------------------");
+		.append("-----------------------------------------------------------------------------------------------------");
 
         
 	while (iterator.hasNext()) {
@@ -54,18 +55,28 @@ public class TabelaEstado {
             str
                     .append('\n')
                     .append(String.format("| %s", ID))
-                    .append(String.join("", Collections.nCopies( 22 - ID.length() , " ")))
-                    .append(String.format("| %.2f %% ", state.getRam()))
-                    .append(String.format("| %.2f %% ", state.getCpu()))
+                    .append(String.join("", Collections.nCopies( 22 - ID.length() , " ")));
+            
+            if (state.getRam() < 10)
+                    str.append(String.format("|  %.2f %% ", state.getRam()));
+            else 
+                    str.append(String.format("| %.2f %% ", state.getRam()));
+            
+            if (state.getCpu() < 10)
+                    str.append(String.format("|  %.2f %% ", state.getCpu()));
+            else 
+                    str.append(String.format("| %.2f %% ", state.getCpu()));
+                            
+            str
                     .append(String.format("| %-3d ", state.getRtt()))
-                    .append(String.format("| %-3d ", state.getBw()));
+                    .append(String.format("| %-4d  ", state.getBw()));
             
             if (state.isAvailable()) str.append("|     true     ");
             else str.append("|     false    ");
             
             str
-                    .append(String.format("|    %-2d      ", state.getUsed()))
-                    .append(String.format("|      %-2d       |", state.getUsed()));
+                    .append(String.format("|    %-2d     ", state.getUsed()))
+                    .append(String.format("|      %-2d      |", state.getUsed()));
 	}
 
 	str.append('\n');
@@ -81,10 +92,13 @@ public class TabelaEstado {
         int timeout;
         
 	while (iterator.hasNext()) {
+            
            ID = (String) iterator.next();
            state = tabela.get(ID);
+           
            state.increaseTimeout();
            timeout = state.getTimeout();
+           
            if (timeout > 6) tabela.remove(ID);
            else if (timeout > 3) state.setUnavailable();
         }
@@ -114,7 +128,7 @@ public class TabelaEstado {
 	}
 	else {
 		state = new Estado(ram, cpu, rtt);
-		this.updateEstado(ID,state);
+		this.updateEstado(ID, state);
 	}
     }
     public void addBytes(String ID,long bytes){
@@ -135,8 +149,10 @@ public class TabelaEstado {
         float maxScore = 0, score;
         
         while (iterator.hasNext()) {
+            
             ID = (String) iterator.next();
             state = tabela.get(ID);
+            
             if (state.isAvailable()) {
                 score = getScore(state);
 

@@ -151,7 +151,6 @@ public class Monitor {
         TimerTask timerTask = new MyTimerTask(stateTable);
         Timer timer = new Timer(true);
         timer.scheduleAtFixedRate(timerTask, 10000, 10000);
-        System.out.println("TimerTask Arrancou");
     }
 
 }

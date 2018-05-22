@@ -1,6 +1,4 @@
 import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -52,7 +50,6 @@ class ClientToServer extends Thread {
             while ((fromClient = br.readLine()) != null) {
             
                 pw.println(fromClient);
-                //System.out.println(fromClient);
                 stateTable.addBytes(serverID, fromClient.getBytes().length);
                 pw.flush();
                 
@@ -98,7 +95,6 @@ class ServerToClient extends Thread {
             while ((fromServer = br.readLine()) != null) {
             
                 pw.println(fromServer);
-                //System.out.println(fromServer);
                 stateTable.addBytes(serverID, fromServer.getBytes().length);
                 pw.flush();
                 
@@ -136,9 +132,7 @@ public class ReverseProxy {
             
             Socket client = welcomeSocket.accept();
             
-            //System.out.println("New client!");
             String serverID = stateTable.getBestServer();
-            //System.out.println("Best server: " + serverID);
             Socket server = getServerSocket(serverID);
             
             Thread clientToServer = new ClientToServer(client, server, serverID, stateTable);

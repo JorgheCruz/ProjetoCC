@@ -14,7 +14,7 @@ public class Estado {
     private long bytesSent = 0;
     private int usedCount = 0;
     
-    public Estado(){
+    public Estado() {
         this.bw = 0;
         available = true;
     }
@@ -26,81 +26,32 @@ public class Estado {
         this.bw = 0;
 	this.available = true;
     }
-    public double getCpu() {
-        return cpu;
-    }
-
-    public int getBw() {
-        return bw;
-    }
-
-    public double getRam() {
-        return ram;
-    }
-
-    public long getRtt() {
-        return rtt;
-    }
     
-    public long getBytesSent(){ 
-        return bytesSent;}
+    public double getCpu() { return cpu; }
+    public double getRam() { return ram; }    
+    public long getRtt() { return rtt; } 
+    public long getBytesSent() { return bytesSent; }
+    public int getTimeout() { return timeout; }
+    public int getUsed() { return usedCount; }
+    public int getBw() { return bw; }
     
-    public int getTimeout(){
-        return timeout;
-    }
-    public int getUsed() {
-        return usedCount;
-    }
+    public void increaseTimeout() { timeout++; }
+    public void increaseUsed() { usedCount++; }
     
-    public void increaseTimeout(){
-        timeout++;
-    }
+    public void resetTimeout() { timeout = 0; }
+    public void resetBytes() { bytesSent = 0; }
+    public void resetUsed() { usedCount = 0; }
     
-    public void increaseUsed(){
-        usedCount++;
-    }
+    public void addBytes(long bytes) { bytesSent += bytes; }
     
-    public void resetTimeout(){
-        timeout=0;
-    }
+    public void setCpu(double cpu) { this.cpu = cpu; }
+    public void setBw(int bw) { this.bw = bw; }
+    public void setRam(double ram) { this.ram = ram; }
+    public void setRtt(long rtt) { this.rtt = rtt; }
+    public void setAvailable() { available = true; }
+    public void setUnavailable(){ available = false; }
     
-    public void resetBytes(){
-        bytesSent = 0;
-    }
-    
-    public void resetUsed(){
-        usedCount = 0;
-    }
-    
-    public void addBytes(long bytes) {
-        bytesSent+= bytes;
-    }
-    
-    public void setCpu(double cpu) {
-        this.cpu = cpu;
-    }
-
-    public void setBw(int bw) {
-        this.bw = bw;
-    }
-
-    public void setRam(double ram) {
-        this.ram = ram;
-    }
-
-    public void setRtt(long rtt) {
-        this.rtt = rtt;
-    }
-    
-    public void setAvailable(){
-        available=true;
-    }
-    
-    public void setUnavailable(){
-        available=false;
-    }
-    
-    public boolean isAvailable(){return available;}
+    public boolean isAvailable(){ return available; }
 
     public String toString(){
         String resposta = ("Ram = " + this.getRam() + "\nCPU Usage: " + this.getCpu() + "\nRTT: " +this.getRtt());
