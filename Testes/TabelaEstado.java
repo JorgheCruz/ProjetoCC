@@ -60,7 +60,7 @@ public class TabelaEstado {
                     .append(String.format("| %-3d ", state.getRtt()))
                     .append(String.format("| %-3d ", state.getBw()));
             
-            if (state.isAvailable()) str.append("|     true     |");
+            if (state.isAvailable()) str.append("|     true     ");
             else str.append("|     false    ");
             
             str
@@ -163,7 +163,7 @@ public class TabelaEstado {
         
         if (bw == 0) base = 200;
         
-        float score = (float) (ram + cpu + 100 * (1 - (rtt/maxRTT)) + 100 * (bw / maxBW) - 20 * uses);
+        float score = (float) (ram + cpu + 100 * (1 - (rtt/maxRTT)) + 100 * (bw / maxBW) - 40 * uses);
         return score;
     }
 }
