@@ -13,10 +13,12 @@ public class TabelaEstado {
     private int maxBW = 50;
     private long maxRTT = 1;
     private int slotTime;
+    private String proxyHostname;
 
-    public TabelaEstado() {
+    public TabelaEstado(String ProxyHostname) {
         tabela = new HashMap<String,Estado>();
-        slotTime=10;
+        slotTime = 10;
+	this.proxyHostname = ProxyHostname;
     }
     
     public Map<String, Estado> getTabela() {
@@ -42,12 +44,20 @@ public class TabelaEstado {
 	String ID;
 	Estado state;
 
-	//str.append('\r');
 	str
+		.append("Reverse Proxy Hostname: ")
+		.append(this.proxyHostname)
+		.append("\n")
+		.append("Reverse Proxy Port: 80")
+		.append('\n')
+
+		.append("-----------------------------------------------------------------------------------------------------")
+		.append('\n')
+
 		.append("| IP:PORTA              | RAM     | CPU     | RTT |  BW   | Availability | UsedCount | TimeoutCount |")
 		.append('\n')
+		
 		.append("-----------------------------------------------------------------------------------------------------");
-
         
 	while (iterator.hasNext()) {
             ID = (String) iterator.next();
@@ -58,12 +68,12 @@ public class TabelaEstado {
                     .append(String.join("", Collections.nCopies( 22 - ID.length() , " ")));
             
             if (state.getRam() < 10)
-                    str.append(String.format("|  %.2f %% ", state.getRam()));
+                    str.append(String.format("| %.2f %%  ", state.getRam()));
             else 
                     str.append(String.format("| %.2f %% ", state.getRam()));
             
             if (state.getCpu() < 10)
-                    str.append(String.format("|  %.2f %% ", state.getCpu()));
+                    str.append(String.format("| %.2f %%  ", state.getCpu()));
             else 
                     str.append(String.format("| %.2f %% ", state.getCpu()));
                             
@@ -76,7 +86,7 @@ public class TabelaEstado {
             
             str
                     .append(String.format("|    %-2d     ", state.getUsed()))
-                    .append(String.format("|      %-2d      |", state.getUsed()));
+                    .append(String.format("|      %-2d      |", state.getTimeout()));
 	}
 
 	str.append('\n');
@@ -110,7 +120,7 @@ public class TabelaEstado {
 	if (this.tabela.containsKey(ID)) {
 		state = tabela.get(ID);
 		long oldrtt = state.getRtt();
-                int oldbw= state.getBw();
+                int oldbw = state.getBw();
                 int bw;
                 
 		/** Calculate new RTT */

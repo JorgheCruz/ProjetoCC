@@ -7,6 +7,7 @@ import java.net.MulticastSocket;
 import static java.lang.Thread.sleep;
 import java.lang.management.ManagementFactory;
 import com.sun.management.OperatingSystemMXBean;
+import java.net.UnknownHostException;
 
 /**
  *
@@ -18,63 +19,76 @@ public class Agente {
         private double cpu;
 	private long delayTime;
 	private final double totalMemory;
+	private final String localIP;
 
-    public Agente () {
+    public Agente() throws UnknownHostException {
+
+	this.localIP = InetAddress.getLocalHost().getHostAddress();
         OperatingSystemMXBean os = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
 	this.totalMemory = (double) (os.getTotalPhysicalMemorySize() / (1024*1024));
     }	
         
-    public void updateEstado(){
+    public void updateEstado() {
         
 	int MB = 1024*1024;
         OperatingSystemMXBean os = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
        
+	/** Calculate free CPU */
         int cores = os.getAvailableProcessors();
 	double loadAvg = (double) os.getSystemLoadAverage();	
 	cpu = (loadAvg / cores) * 100;
 	cpu = 100 - (Math.round(cpu * 100) / 100.0d);
 
+	/** Calculate free RAM */
         double usedMemory = (double) ((this.totalMemory - (os.getFreePhysicalMemorySize() / MB)));
         ram = (usedMemory / this.totalMemory) * 100;
         ram = 100 - (Math.round(ram * 100) / 100.0d);
     }
 
-    public String toString(){
+    public String toString(String serverID) {
 
-	String resposta = (this.ram + "\n" + this.cpu + "\n" + this.delayTime + "\n");
+	String resposta = (serverID + "/" + this.ram + "/" + this.cpu + "/" + this.delayTime);
         return resposta;
     }
 
     public static void main (String args[]) throws SocketException, IOException, InterruptedException {
         
 	Agente agente = new Agente();
-        String serverID = args[0] + ":" + args[1];
+        String serverID = agente.localIP + ":" + args[0];
+	Cypher cypher = new Cypher();
 
+	/** Join Multicast Socket in IP 239.8.8.8 and Port 8888 */
         MulticastSocket socketToReceive = new MulticastSocket(8888);
-	InetAddress group = InetAddress.getByName("239.8.8.8"), monitorAddress;
+	InetAddress group = InetAddress.getByName("239.8.8.8");
 	socketToReceive.joinGroup(group);
+
 	DatagramSocket socketToSend = new DatagramSocket();
 	
-	byte[] aReceber = new byte[1024];
-	DatagramPacket request = new DatagramPacket(aReceber, aReceber.length);
+	byte[] received = new byte[1024];
+	DatagramPacket requestPacket = new DatagramPacket(received, received.length);
+	DatagramPacket answerPacket; 
        
-	boolean moreRequest = true;
+       	while (true) {
 
-       	while (moreRequest) {
+        	socketToReceive.receive(requestPacket);
+		String requestMessage = cypher.checkMessage(new String(requestPacket.getData(), 0, requestPacket.getLength()));
+		
+		/** Check request integrity and authentication */
+		if (requestMessage != null) {
 
-        	socketToReceive.receive(request);
-		String msgReceived = new String(request.getData(), 0, request.getLength()); 
+			/** Delay answer between 0 and 10 ms */
+			agente.delayTime = (long) (Math.random() * 10);
+			sleep(agente.delayTime);
 
-		/** Delay answer between 0 and 10 ms */
-		agente.delayTime = (long) (Math.random() * 10);
-		sleep(agente.delayTime);
+			agente.updateEstado();
+			String answer = agente.toString(serverID);
+			String answerHash = cypher.encrypt(answer);
+			String msg = answer + "\n" + answerHash;
 
-		agente.updateEstado();
-		String msg = serverID + "\n" + agente.toString();
-
-		monitorAddress = request.getAddress();
-		DatagramPacket answer = new DatagramPacket(msg.getBytes(), msg.length(), monitorAddress, request.getPort());
-		socketToSend.send(answer);
+			/** Prepare and send Datagram Packet with server info */
+			answerPacket = new DatagramPacket(msg.getBytes(), msg.length(), requestPacket.getAddress(), requestPacket.getPort());
+			socketToSend.send(answerPacket);
+		}
 	}
         
     }

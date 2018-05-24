@@ -1,7 +1,5 @@
 import java.io.IOException;
 import static java.lang.Thread.sleep;
-import java.io.BufferedReader;
-import java.io.StringReader;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -24,6 +22,7 @@ class MonitorSend extends Thread {
     private final int port = 8888;
     private SharedTimeSent time;
     private TabelaEstado stateTable;
+    private Cypher cypher = new Cypher();
 
     MonitorSend(SharedTimeSent time, TabelaEstado stateTable, DatagramSocket socket, String address) throws IOException {
 
@@ -42,15 +41,16 @@ class MonitorSend extends Thread {
 
     public void run() {
 
-        boolean needStates = true;
         int sleeptime = 10000;
         
         if (IP != null) {
-                byte[] buf = new byte[1];
-                this.packet = new DatagramPacket(buf, buf.length, IP, port);
+		String request = "revproinfo";
+		String requestHash = cypher.encrypt(request);
+		String msg = request + "\n" + requestHash;
+                this.packet = new DatagramPacket(msg.getBytes(), msg.length(), IP, port);
         }
 
-        while (needStates) {
+        while (true) {
 
                 this.time.setTimestamp(System.currentTimeMillis());
 
@@ -76,6 +76,7 @@ class MonitorReceive extends Thread {
     private DatagramPacket answer;
     private SharedTimeSent time;
     private TabelaEstado stateTable;
+    private Cypher cypher = new Cypher();
 
     MonitorReceive(SharedTimeSent time, TabelaEstado stateTable, DatagramSocket socket) {
 
@@ -87,17 +88,27 @@ class MonitorReceive extends Thread {
         answer = new DatagramPacket(aReceber, aReceber.length);
     }
 
+    public void updateTable(String msg, long timeReceived, long timeSent) {
+   	
+	String[] info = msg.split("/");
+	
+	String ID = info[0];
+	double ram = Double.parseDouble(info[1]);
+	double cpu = Double.parseDouble(info[2]);
+	long delayTime = Long.parseLong(info[3]);
+
+	long rtt = timeReceived - timeSent - delayTime;
+
+	this.stateTable.updateState(ID, ram, cpu, rtt);
+    }
+
     @Override
     public void run() {
         
-        boolean moreStates = true;
-        BufferedReader reader;
-        String msgReceived, ID;
-        double ram, cpu;
-        long rtt, timeReceived, timeSent, delayTime;
-        Scanner scanner;
+        String msgReceived;
+        long timeReceived, timeSent;
 
-        while (moreStates) {
+        while (true) {
 
                 try {
                         socket.receive(answer);
@@ -106,26 +117,17 @@ class MonitorReceive extends Thread {
                         System.err.println(e.getMessage());
                 }
 
-                msgReceived = new String(answer.getData(), 0, answer.getLength());
-                reader = new BufferedReader(new StringReader(msgReceived));
-
                 /** Timestamp when answer was received */
                 timeReceived = System.currentTimeMillis();
 
-                scanner = new Scanner(msgReceived);
-                
-                ID = scanner.nextLine();
-                ram = Double.parseDouble(scanner.nextLine());
-                cpu = Double.parseDouble(scanner.nextLine());
-                delayTime = Long.parseLong(scanner.nextLine());
-
                 /** Timestamp when request was sent */
                 timeSent = this.time.getTimestamp();
+                
+                msgReceived = cypher.checkMessage(new String(answer.getData(), 0, answer.getLength()));
 
-                rtt = timeReceived - timeSent - delayTime;
-
-                this.stateTable.updateState(ID, ram, cpu, rtt);
-        }
+		if (msgReceived != null)
+			updateTable(msgReceived, timeReceived, timeSent);
+	}
     }
 }
 
@@ -142,15 +144,15 @@ public class Monitor {
     }
 
     public void start(String address) throws IOException, InterruptedException {
+        
+        TimerTask timerTask = new MyTimerTask(stateTable);
+        Timer timer = new Timer(true);
+        timer.scheduleAtFixedRate(timerTask, 10000, 10000);
 
         Thread send = new MonitorSend(time, stateTable, socket, address);
         Thread receive = new MonitorReceive(time, stateTable, socket);
         send.start();
         receive.start();
-        
-        TimerTask timerTask = new MyTimerTask(stateTable);
-        Timer timer = new Timer(true);
-        timer.scheduleAtFixedRate(timerTask, 10000, 10000);
     }
 
 }
@@ -167,11 +169,11 @@ class MyTimerTask extends TimerTask {
     
     private TabelaEstado stateTable;
     
-    MyTimerTask(TabelaEstado newStateTable){
-        stateTable=newStateTable;
-    }
+    MyTimerTask(TabelaEstado stateTable) {
+        this.stateTable = stateTable;
+    } 
     
-    public void run(){
+    public void run() {
         stateTable.incTimeout();
     }
 }

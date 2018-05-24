@@ -18,91 +18,46 @@ import java.util.logging.Logger;
  */
 
 
-class ClientToServer extends Thread {
+class Pipe extends Thread {
     
-    Socket client, server;
-    InputStream dIn;
-    OutputStream dOut;
+    Socket from, dest;
+    InputStream in;
+    OutputStream out;
     String serverID;
     TabelaEstado stateTable;
     
-    public ClientToServer(Socket client, Socket server, String serverID, TabelaEstado stateTable) throws IOException {
+    public Pipe(Socket from, Socket dest, String serverID, TabelaEstado stateTable) throws IOException {
         
         this.stateTable = stateTable;
-        this.client = client;
-        this.server = server;
-        this.dIn = client.getInputStream();
-        this.dOut = server.getOutputStream();
+        this.from = from;
+        this.dest = dest;
+        this.in = from.getInputStream();
+        this.out = dest.getOutputStream();
         this.serverID = serverID;
     }
     
     @Override
     public void run() {
         
-        String fromClient;
+	byte[] buffer = new byte[1024 * 1024 * 10];
+	int length;
         
-        try {
-            InputStreamReader in = new InputStreamReader(dIn);
-            BufferedReader br = new BufferedReader(in);
-            
-            PrintWriter pw = new PrintWriter(dOut, false);
-            
-            while ((fromClient = br.readLine()) != null) {
-            
-                pw.println(fromClient);
-                stateTable.addBytes(serverID, fromClient.getBytes().length);
-                pw.flush();
-                
-            }
-            
-        } catch (IOException ex) {
-            try {
-                client.close();
-                server.close();
-            } catch (IOException ex1) {
-                Logger.getLogger(ClientToServer.class.getName()).log(Level.SEVERE, null, ex1);
-            }
-        }
-    }
-}
+	try {
+		while ((length = in.read(buffer)) != -1) {
+		
+			stateTable.addBytes(serverID, length);
+			out.write(buffer, 0, length);
+		}
 
-class ServerToClient extends Thread {
-    
-    InputStream dIn;
-    OutputStream dOut;
-    String serverID;
-    TabelaEstado stateTable;
-    
-    public ServerToClient(Socket client, Socket server, String serverID, TabelaEstado stateTable) throws IOException {
-        
-        this.stateTable = stateTable;
-        this.dIn = server.getInputStream();
-        this.dOut = client.getOutputStream();
-        this.serverID = serverID;
-    }
-    
-    @Override
-    public void run() {
-        
-        String fromServer;
-        
-        try {
-            InputStreamReader in = new InputStreamReader(dIn);
-            BufferedReader br = new BufferedReader(in);
-            
-            PrintWriter pw = new PrintWriter(dOut, false);
-            
-            while ((fromServer = br.readLine()) != null) {
-            
-                pw.println(fromServer);
-                stateTable.addBytes(serverID, fromServer.getBytes().length);
-                pw.flush();
-                
-            }
-            
-        } catch (IOException ex) {
-                Logger.getLogger(ClientToServer.class.getName()).log(Level.SEVERE, null, ex);
-        }
+		//in.close();
+		//out.close();
+		from.close();
+	}
+
+	catch (Exception exc) {
+
+		Logger.getLogger(Pipe.class.getName()).log(Level.SEVERE, null, exc);
+	}
     }
 }
 
@@ -120,8 +75,9 @@ public class ReverseProxy {
     
     public static void main(String[] args) throws SocketException, IOException, InterruptedException {
 
-        InetAddress IP;
-        TabelaEstado stateTable = new TabelaEstado();
+        InetAddress IP = InetAddress.getLocalHost();
+	String hostname = IP.getHostName();
+        TabelaEstado stateTable = new TabelaEstado(hostname);
         
         Monitor monitor = new Monitor(stateTable);
         monitor.start("239.8.8.8");
@@ -135,8 +91,8 @@ public class ReverseProxy {
             String serverID = stateTable.getBestServer();
             Socket server = getServerSocket(serverID);
             
-            Thread clientToServer = new ClientToServer(client, server, serverID, stateTable);
-            Thread serverToClient = new ServerToClient(client, server, serverID, stateTable);
+            Thread clientToServer = new Pipe(client, server, serverID, stateTable);
+            Thread serverToClient = new Pipe(server, client, serverID, stateTable);
             
             clientToServer.start();
             serverToClient.start();
