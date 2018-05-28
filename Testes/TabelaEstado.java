@@ -186,10 +186,12 @@ public class TabelaEstado {
         int bw = state.getBw();
         int uses = state.getUsed();
         int base = 100;
-        
         if (bw == 0) base = 200;
-        
-        float score = (float) (ram + cpu + 100 * (1 - (rtt/maxRTT)) + 100 * (bw / maxBW) - 40 * uses);
+        float score;
+        if(cpu > 5 && ram > 5)
+            score = (float) (ram * 2 + cpu + 100 * (1 - (rtt/maxRTT)) + 100 * (bw / maxBW) - 40 * uses);
+        else 
+            score = (float) (100 * (1 - (rtt/maxRTT)) + 100 * (bw / maxBW) - 40 * uses);
         return score;
     }
 }
