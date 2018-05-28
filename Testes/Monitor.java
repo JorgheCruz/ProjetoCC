@@ -10,20 +10,35 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 /**
- *
- * @author treishy
+ A classe Monitor está dividida em duas Threads, uma para enviar a mensagem multicast, de 10 em 10 segundos(MonitorSend) 
+ e outra a receber as respostas dos agentes à mensagem de probing (MonitorReceive). 
+ A Monitor-Receive, ao receber a mensagem, faz o parsing da mensagem e atualiza a tabela de Estado,
+ com os parâmetros recebidos. Além disso, o Monitor, que lança estas duas threads, terá um TimerTask que é responsável 
+ por acada 10 segundos, executar a tarefa de incrementar o valor deTimeoutde cada agente presenta naTabela deEstado.
+ * @author grupo 28
  */
 
 class MonitorSend extends Thread {
 
+    /** Socket que recebe e envia DatagramPakcets*/
     private final DatagramSocket socket;
+
+    /** Packet que é recebido e envido pelo DatagramSocket*/
     private DatagramPacket packet;
+
+    /** Endereço ip */
     private InetAddress IP;
+    /**Porta*/
     private final int port = 8888;
+    /**Tempo em que enviou o ultimo pacote */
     private SharedTimeSent time;
+    /**Tabela de Estados*/
     private TabelaEstado stateTable;
+
+    /** Cifra que codifica as e verifica mensagens*/
     private Cypher cypher = new Cypher();
 
+    /** Construtor da classe*/
     MonitorSend(SharedTimeSent time, TabelaEstado stateTable, DatagramSocket socket, String address) throws IOException {
 
         try{
@@ -38,7 +53,7 @@ class MonitorSend extends Thread {
         this.socket = socket;
         this.stateTable = stateTable;
     }
-
+    /**Override do método run*/
     public void run() {
 
         int sleeptime = 10000;
@@ -72,12 +87,18 @@ class MonitorSend extends Thread {
 
 class MonitorReceive extends Thread {
 
+    /** Socket que recebe e envia DatagramPakcets*/
     private final DatagramSocket socket;
+    /** Packet que é recebido pelo DatagramSocket*/
     private DatagramPacket answer;
+    /**Tempo em que recebeu o ultimo packet*/
     private SharedTimeSent time;
+    /**Tabela de Estado*/
     private TabelaEstado stateTable;
+    /** Cifra que codifica as e verifica mensagens*/
     private Cypher cypher = new Cypher();
 
+    /**Construtor da classe*/
     MonitorReceive(SharedTimeSent time, TabelaEstado stateTable, DatagramSocket socket) {
 
         this.socket = socket;
@@ -88,6 +109,7 @@ class MonitorReceive extends Thread {
         answer = new DatagramPacket(aReceber, aReceber.length);
     }
 
+    /**Método que atualiza a tabela de estados*/
     public void updateTable(String msg, long timeReceived, long timeSent) {
    	
 	String[] info = msg.split("/");
@@ -102,6 +124,7 @@ class MonitorReceive extends Thread {
 	this.stateTable.updateState(ID, ram, cpu, rtt);
     }
 
+    /**Overide do metodo run*/
     @Override
     public void run() {
         
@@ -117,10 +140,10 @@ class MonitorReceive extends Thread {
                         System.err.println(e.getMessage());
                 }
 
-                /** Timestamp when answer was received */
+                /** Timestamp de quando recebeu a resposta */
                 timeReceived = System.currentTimeMillis();
 
-                /** Timestamp when request was sent */
+                /** Timestamp de quando enviou o pedido*/
                 timeSent = this.time.getTimestamp();
                 
                 msgReceived = cypher.checkMessage(new String(answer.getData(), 0, answer.getLength()));
@@ -133,16 +156,24 @@ class MonitorReceive extends Thread {
 
 public class Monitor {
     
+    /**Socket que recebe e envia pacotes*/
     private final DatagramSocket socket;
+    /**Tempo desde a ultimo pacote enviado ou recebido*/
     private final SharedTimeSent time;
+    /**Tabela de Estados*/
     private final TabelaEstado stateTable;
     
+    /**Construtor da classe*/
     public Monitor(TabelaEstado stateTable) throws SocketException {
         this.socket = new DatagramSocket();
         this.time = new SharedTimeSent();
         this.stateTable = stateTable;
     }
 
+    /**
+     Metodo invocado pelo reverse proxy que cria as threads MonitorSend e MonitorReceive
+     e inicializa tarefa de incrementação dos timeouts
+     */
     public void start(String address) throws IOException, InterruptedException {
         
         TimerTask timerTask = new MyTimerTask(stateTable);
@@ -157,6 +188,8 @@ public class Monitor {
 
 }
 
+
+/** Classes auxiliares para o tempo*/
 class SharedTimeSent {
 
         public volatile long timestamp;
@@ -165,14 +198,16 @@ class SharedTimeSent {
         public long getTimestamp() { return timestamp; }
 }
 
+/** Classes auxiliares para incrementar timeouts*/
 class MyTimerTask extends TimerTask {
     
     private TabelaEstado stateTable;
     
+    /**Construtor da classe*/
     MyTimerTask(TabelaEstado stateTable) {
         this.stateTable = stateTable;
     } 
-    
+    /**Override da função run*/
     public void run() {
         stateTable.incTimeout();
     }

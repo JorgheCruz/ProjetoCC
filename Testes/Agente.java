@@ -55,7 +55,7 @@ public class Agente {
     }
 
     /** 
-    Conversão da informação do objeto para uma string
+    Override da função toString
 	@param serverID id do servidor
 	@return string com id do servidor, ram, cpu e tempo de delay das mensagens
     */
