@@ -26,13 +26,10 @@ public class Agente {
 	private long delayTime;
 	/** Memória total do servidor*/
 	private final double totalMemory;
-	/** IP local*/
-	private final String localIP;
 
 	/** Construtor da classe*/
     public Agente() throws UnknownHostException {
 
-		this.localIP = InetAddress.getLocalHost().getHostAddress();
         OperatingSystemMXBean os = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
 		this.totalMemory = (double) (os.getTotalPhysicalMemorySize() / (1024*1024));
     }	
@@ -70,7 +67,7 @@ public class Agente {
     public static void main (String args[]) throws SocketException, IOException, InterruptedException {
         
 		Agente agente = new Agente();
-        String serverID = agente.localIP + ":" + args[0];
+        String serverID = args[0] + ":" + args[1];
 		Cypher cypher = new Cypher();
 
 		/** Join Multicast Socket in IP 239.8.8.8 and Port 8888 */
